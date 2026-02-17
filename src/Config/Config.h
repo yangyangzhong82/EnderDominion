@@ -2,6 +2,7 @@
 
 #include "ll/api/io/LogLevel.h"
 #include <string>
+#include <vector>
 
 namespace my_mod {
 
@@ -15,6 +16,20 @@ struct Config {
     bool             enderDragonNaturalRegenEnabled = true;
     int              enderDragonRegenAmount         = 1;
     int              enderDragonRegenIntervalTicks  = 60;
+    bool             enderDragonAttackDebuffEnabled = true;
+    float            enderDragonAttackDebuffChance  = 0.35F;
+    int              enderDragonAttackDebuffTicks   = 120;
+    int              enderDragonAttackDebuffLevel   = 0;
+    bool             enderDragonPeriodicDebuffEnabled       = true;
+    int              enderDragonPeriodicDebuffIntervalTicks = 100;
+    float            enderDragonPeriodicDebuffRange         = 20.0F;
+    std::vector<std::string> enderDragonAttackDebuffTypes{
+        "slowness",
+        "weakness",
+        "poison",
+        "wither",
+        "blindness"
+    };
 };
 
 } // namespace my_mod
