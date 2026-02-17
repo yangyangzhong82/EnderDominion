@@ -1,42 +1,32 @@
 #pragma once
 
-#include "config.h"
-#include <memory>
+#include "Config/Config.h"
+#include <filesystem>
 #include <string>
-
 
 namespace my_mod {
 
 class ConfigManager {
 public:
-    // 获取单例实例
     static ConfigManager& getInstance();
 
-    // 加载配置，如果文件不存在则创建默认配置
     bool load(const std::string& path);
+    bool save() const;
 
-    // 保存配置
-    bool save();
-
-
-
-    // 获取配置对象的引用
-    Config& get();
-
-    // 获取配置对象的常量引用
+    Config&       get();
     const Config& get() const;
 
 private:
-    ConfigManager();
-    ~ConfigManager();
+    ConfigManager() = default;
+    ~ConfigManager() = default;
 
     ConfigManager(const ConfigManager&)            = delete;
     ConfigManager& operator=(const ConfigManager&) = delete;
     ConfigManager(ConfigManager&&)                 = delete;
     ConfigManager& operator=(ConfigManager&&)      = delete;
 
-    std::unique_ptr<Config> mConfig;
-    std::string             mConfigPath;
+    Config               mConfig{};
+    std::filesystem::path mConfigPath;
 };
 
 } // namespace my_mod

@@ -16,7 +16,7 @@
 #include "mc/world/level/Level.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/dimension/end/EndDragonFight.h"
-#include "mod/Gloabl.h"
+#include "mod/Global.h"
 #include <algorithm>
 #include <memory>
 #include <unordered_set>
@@ -36,7 +36,8 @@ void applyEnderDragonMaxHealth(Mob& mob) {
         return;
     }
 
-    float const targetHealth = config.enderDragonMaxHealth;
+    const auto&  cfg          = getConfig();
+    float const  targetHealth = cfg.enderDragonMaxHealth;
     if (targetHealth <= 0.0F) {
         return;
     }
@@ -94,17 +95,18 @@ void rebuildPlayersInEndSnapshot() {
 }
 
 void applyDragonNaturalRegen(Level& level) {
-    if (!config.enderDragonNaturalRegenEnabled) {
+    const auto& cfg = getConfig();
+    if (!cfg.enderDragonNaturalRegenEnabled) {
         return;
     }
 
-    int const interval = std::max(1, config.enderDragonRegenIntervalTicks);
+    int const interval = std::max(1, cfg.enderDragonRegenIntervalTicks);
     if (++dragonRegenTickCounter < interval) {
         return;
     }
     dragonRegenTickCounter = 0;
 
-    int const healAmount = std::max(1, config.enderDragonRegenAmount);
+    int const healAmount = std::max(1, cfg.enderDragonRegenAmount);
     for (auto* actor : level.getRuntimeActorList()) {
         if (!actor || actor->getEntityTypeId() != ActorType::Dragon) {
             continue;
@@ -154,11 +156,12 @@ void handleActorHurt(ll::event::ActorHurtEvent& event) {
 
     auto const& source = event.source();
 
-    if (!config.enderDragonReflectEnabled) {
+    const auto& cfg = getConfig();
+    if (!cfg.enderDragonReflectEnabled) {
         return;
     }
 
-    float const reflectRatio  = config.enderDragonReflectRatio;
+    float const reflectRatio  = cfg.enderDragonReflectRatio;
     float const reflectDamage = event.damage() * reflectRatio;
     if (reflectRatio <= 0.0F || reflectDamage <= 0.0F) {
         return;

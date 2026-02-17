@@ -3,17 +3,18 @@
 #include "ll/api/io/LogLevel.h"
 #include <string>
 
-namespace my_mod {} // namespace my_mod
-
+namespace my_mod {
 
 struct Config {
-    int              version              = 1;
-    ll::io::LogLevel logLevel             = ll::io::LogLevel::Info; // 日志等级
-    std::string      language             = "zh_CN";                // 语言设置
-    float            enderDragonMaxHealth    = 200.0F;
-    bool             enderDragonReflectEnabled = true;
-    float            enderDragonReflectRatio      = 0.25F;
+    int              version                        = 1;
+    ll::io::LogLevel logLevel                       = ll::io::LogLevel::Info;
+    std::string      language                       = "zh_CN";
+    float            enderDragonMaxHealth           = 200.0F;
+    bool             enderDragonReflectEnabled      = true;
+    float            enderDragonReflectRatio        = 0.25F;
     bool             enderDragonNaturalRegenEnabled = true;
     int              enderDragonRegenAmount         = 1;
     int              enderDragonRegenIntervalTicks  = 20;
 };
+
+} // namespace my_mod
