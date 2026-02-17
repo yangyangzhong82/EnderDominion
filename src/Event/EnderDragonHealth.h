@@ -2,7 +2,6 @@
 
 namespace my_mod::event {
 
-void enableEnderDragonHealthControl();
-void disableEnderDragonHealthControl();
+int applyEnderDragonMaxHealthToExisting();
 
 } // namespace my_mod::event
