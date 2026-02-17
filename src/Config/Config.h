@@ -7,7 +7,10 @@ namespace my_mod {} // namespace my_mod
 
 
 struct Config {
-    int              version  = 1;
-    ll::io::LogLevel logLevel = ll::io::LogLevel::Info; // 日志等级
-    std::string      language = "zh_CN";                // 语言设置
+    int              version              = 1;
+    ll::io::LogLevel logLevel             = ll::io::LogLevel::Info; // 日志等级
+    std::string      language             = "zh_CN";                // 语言设置
+    float            enderDragonMaxHealth    = 200.0F;
+    bool             enderDragonReflectEnabled = true;
+    float            enderDragonReflectRatio   = 0.25F;
 };

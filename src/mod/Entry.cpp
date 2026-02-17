@@ -1,8 +1,9 @@
 #include "mod/Entry.h"
 
-#include "ll/api/mod/RegisterHelper.h"
 #include "Config/ConfigManager.h"
+#include "Event/EnderDragonHealth.h"
 #include "I18n/I18n.h"
+#include "ll/api/mod/RegisterHelper.h"
 
 namespace my_mod {
 ll::io::Logger& logger = Entry::getInstance().getSelf().getLogger();
@@ -41,11 +42,13 @@ bool Entry::load() {
 
 bool Entry::enable() {
     getSelf().getLogger().debug("Enabling...");
+    event::enableEnderDragonHealthControl();
     return true;
 }
 
 bool Entry::disable() {
     getSelf().getLogger().debug("Disabling...");
+    event::disableEnderDragonHealthControl();
     logger.info(tr("plugin.unloaded"));
     return true;
 }
