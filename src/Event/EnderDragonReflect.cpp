@@ -4,7 +4,9 @@
 #include "ll/api/event/entity/ActorHurtEvent.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/Actor.h"
+#include "mc/world/actor/ActorDamageByActorSource.h"
 #include "mc/world/actor/ActorType.h"
+#include "mc/world/actor/Mob.h"
 #include "mc/world/level/Level.h"
 #include "mod/Global.h"
 
@@ -48,7 +50,8 @@ void handleActorHurt(ll::event::ActorHurtEvent& event) {
             return true;
         }
 
-        attacker->hurtByCause(reflectDamage, SharedTypes::Legacy::ActorDamageCause::Thorns, event.self());
+        ActorDamageByActorSource source{event.self(), SharedTypes::Legacy::ActorDamageCause::Thorns};
+        static_cast<Mob*>(attacker)->_hurt(source, reflectDamage, false, false);
         return true;
     });
 }
