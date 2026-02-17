@@ -2,6 +2,8 @@
 
 #include "Config/ConfigManager.h"
 #include "Event/EnderDragonHealth.h"
+#include "Event/EnderDragonNaturalRegen.h"
+#include "Event/EnderDragonReflect.h"
 #include "I18n/I18n.h"
 #include "mod/Global.h"
 #include "ll/api/mod/RegisterHelper.h"
@@ -44,11 +46,15 @@ bool Entry::load() {
 bool Entry::enable() {
     getSelf().getLogger().debug("Enabling...");
     event::enableEnderDragonHealthControl();
+    event::enableEnderDragonNaturalRegen();
+    event::enableEnderDragonReflect();
     return true;
 }
 
 bool Entry::disable() {
     getSelf().getLogger().debug("Disabling...");
+    event::disableEnderDragonReflect();
+    event::disableEnderDragonNaturalRegen();
     event::disableEnderDragonHealthControl();
     getLogger().info(tr("plugin.unloaded"));
     return true;
