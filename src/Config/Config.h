@@ -12,5 +12,8 @@ struct Config {
     std::string      language             = "zh_CN";                // 语言设置
     float            enderDragonMaxHealth    = 200.0F;
     bool             enderDragonReflectEnabled = true;
-    float            enderDragonReflectRatio   = 0.25F;
+    float            enderDragonReflectRatio      = 0.25F;
+    bool             enderDragonNaturalRegenEnabled = true;
+    int              enderDragonRegenAmount         = 1;
+    int              enderDragonRegenIntervalTicks  = 20;
 };

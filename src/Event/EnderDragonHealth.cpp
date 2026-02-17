@@ -1,32 +1,35 @@
 #include "Event/EnderDragonHealth.h"
 
-#include "mod/Gloabl.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/entity/ActorHurtEvent.h"
-#include "ll/api/memory/Hook.h"
 #include "ll/api/event/world/LevelTickEvent.h"
 #include "ll/api/event/world/SpawnMobEvent.h"
+#include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
+#include "mc/world/actor/Mob.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/attribute/Attribute.h"
 #include "mc/world/attribute/AttributeInstanceForwarder.h"
 #include "mc/world/attribute/AttributeModificationContext.h"
 #include "mc/world/attribute/BaseAttributeMap.h"
 #include "mc/world/attribute/SharedAttributes.h"
+#include "mc/world/level/Level.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/dimension/end/EndDragonFight.h"
-#include "mc/world/level/Level.h"
+#include "mod/Gloabl.h"
+#include <algorithm>
 #include <memory>
 #include <unordered_set>
 
 namespace my_mod::event {
 
 namespace {
-ll::event::ListenerPtr spawnedMobListener;
-ll::event::ListenerPtr levelTickListener;
-ll::event::ListenerPtr actorHurtListener;
+ll::event::ListenerPtr                                                      spawnedMobListener;
+ll::event::ListenerPtr                                                      levelTickListener;
+ll::event::ListenerPtr                                                      actorHurtListener;
 std::unique_ptr<ll::memory::HookRegistrar<class EndDragonRespawnStageHook>> respawnStageHookRegistrar;
-std::unordered_set<ActorUniqueID> playersInEnd;
+std::unordered_set<ActorUniqueID>                                           playersInEnd;
+int                                                                          dragonRegenTickCounter = 0;
 
 void applyEnderDragonMaxHealth(Mob& mob) {
     if (mob.getEntityTypeId() != ActorType::Dragon) {
@@ -38,7 +41,7 @@ void applyEnderDragonMaxHealth(Mob& mob) {
         return;
     }
 
-    auto* attributeMap = const_cast<BaseAttributeMap*>(mob.getAttributes().get());
+    auto*                      attributeMap = const_cast<BaseAttributeMap*>(mob.getAttributes().get());
     AttributeInstanceForwarder healthAttribute{
         attributeMap->getMutableInstance(SharedAttributes::HEALTH().mIDValue),
         AttributeModificationContext{attributeMap}
@@ -90,6 +93,28 @@ void rebuildPlayersInEndSnapshot() {
     });
 }
 
+void applyDragonNaturalRegen(Level& level) {
+    if (!config.enderDragonNaturalRegenEnabled) {
+        return;
+    }
+
+    int const interval = std::max(1, config.enderDragonRegenIntervalTicks);
+    if (++dragonRegenTickCounter < interval) {
+        return;
+    }
+    dragonRegenTickCounter = 0;
+
+    int const healAmount = std::max(1, config.enderDragonRegenAmount);
+    for (auto* actor : level.getRuntimeActorList()) {
+        if (!actor || actor->getEntityTypeId() != ActorType::Dragon) {
+            continue;
+        }
+        if (actor->getHealth() < actor->getMaxHealth()) {
+            actor->heal(healAmount);
+        }
+    }
+}
+
 void handleLevelTick(Level&) {
     ll::service::getLevel().transform([](Level& level) {
         std::unordered_set<ActorUniqueID> currentPlayersInEnd;
@@ -114,6 +139,7 @@ void handleLevelTick(Level&) {
         if (hasPlayerEnteredEnd) {
             applyToExistingEnderDragons();
         }
+        applyDragonNaturalRegen(level);
         return true;
     });
 }
@@ -122,10 +148,13 @@ void handleActorHurt(ll::event::ActorHurtEvent& event) {
     if (event.isCancelled()) {
         return;
     }
-    if (!config.enderDragonReflectEnabled) {
+    if (event.self().getEntityTypeId() != ActorType::Dragon) {
         return;
     }
-    if (event.self().getEntityTypeId() != ActorType::Dragon) {
+
+    auto const& source = event.source();
+
+    if (!config.enderDragonReflectEnabled) {
         return;
     }
 
@@ -135,7 +164,6 @@ void handleActorHurt(ll::event::ActorHurtEvent& event) {
         return;
     }
 
-    auto const& source = event.source();
     auto        uid    = source.getDamagingEntityUniqueID();
     if (uid == ActorUniqueID::INVALID_ID()) {
         uid = source.getEntityUniqueID();
@@ -150,11 +178,7 @@ void handleActorHurt(ll::event::ActorHurtEvent& event) {
             return true;
         }
 
-        attacker->hurtByCause(
-            reflectDamage,
-            SharedTypes::Legacy::ActorDamageCause::Thorns,
-            event.self()
-        );
+        attacker->hurtByCause(reflectDamage, SharedTypes::Legacy::ActorDamageCause::Thorns, event.self());
         return true;
     });
 }
@@ -198,6 +222,7 @@ void disableEnderDragonHealthControl() {
         actorHurtListener.reset();
     }
     respawnStageHookRegistrar.reset();
+    dragonRegenTickCounter = 0;
     playersInEnd.clear();
 }
 
