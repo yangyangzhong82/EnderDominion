@@ -1,79 +1,82 @@
 #include "Event/EnderDragonReflect.h"
 
-#include "ll/api/event/EventBus.h"
-#include "ll/api/event/entity/ActorHurtEvent.h"
+#include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorDamageByActorSource.h"
+#include "mc/world/actor/ActorDamageSource.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/level/Level.h"
 #include "mod/Global.h"
+#include <memory>
 
 namespace my_mod::event {
 
 namespace {
-ll::event::ListenerPtr actorHurtListener;
+std::unique_ptr<ll::memory::HookRegistrar<class MobHurtHook>> hookRegistrar;
 
-void handleActorHurt(ll::event::ActorHurtEvent& event) {
-    if (event.isCancelled()) {
-        return;
-    }
-    if (event.self().getEntityTypeId() != ActorType::Dragon) {
-        return;
+LL_TYPE_INSTANCE_HOOK(
+    MobHurtHook,
+    ll::memory::HookPriority::Normal,
+    Mob,
+    &Mob::$_hurt,
+    bool,
+    ::ActorDamageSource const& source,
+    float                      damage,
+    bool                       knock,
+    bool                       ignite
+) {
+    bool const result = origin(source, damage, knock, ignite);
+    if (!result) {
+        return result;
     }
 
-    auto const& source = event.source();
+    auto* selfMob = this->thisFor<Mob>();
+    if (!selfMob || selfMob->getEntityTypeId() != ActorType::Dragon) {
+        return result;
+    }
 
     const auto& cfg = getConfig();
     if (!cfg.enderDragonReflectEnabled) {
-        return;
+        return result;
     }
 
     float const reflectRatio  = cfg.enderDragonReflectRatio;
-    float const reflectDamage = event.damage() * reflectRatio;
+    float const reflectDamage = damage * reflectRatio;
     if (reflectRatio <= 0.0F || reflectDamage <= 0.0F) {
-        return;
+        return result;
     }
 
-    auto uid = source.getDamagingEntityUniqueID();
-    if (uid == ActorUniqueID::INVALID_ID()) {
-        uid = source.getEntityUniqueID();
-    }
-    if (uid == ActorUniqueID::INVALID_ID()) {
-        return;
-    }
-
-    ll::service::getLevel().transform([&](Level& level) {
-        auto* attacker = level.fetchEntity(uid, false);
-        if (!attacker || !attacker->hasType(ActorType::Player)) {
-            return true;
+    Actor* damageSource = nullptr;
+    if (source.isEntitySource()) {
+        auto uid = source.isChildEntitySource() ? source.getEntityUniqueID() : source.getDamagingEntityUniqueID();
+        if (uid != ActorUniqueID::INVALID_ID()) {
+            ll::service::getLevel().transform([&](Level& level) {
+                damageSource = level.fetchEntity(uid, false);
+                return true;
+            });
         }
+    }
+    if (!damageSource || !damageSource->hasType(ActorType::Player)) {
+        return result;
+    }
 
-        ActorDamageByActorSource source{event.self(), SharedTypes::Legacy::ActorDamageCause::Thorns};
-        static_cast<Mob*>(attacker)->_hurt(source, reflectDamage, false, false);
-        return true;
-    });
+    ActorDamageByActorSource reflectSource{*selfMob, SharedTypes::Legacy::ActorDamageCause::Thorns};
+    static_cast<Mob*>(damageSource)->_hurt(reflectSource, reflectDamage, false, false);
+    return result;
 }
 } // namespace
 
 void enableEnderDragonReflect() {
-    if (actorHurtListener) {
+    if (hookRegistrar) {
         return;
     }
-
-    actorHurtListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::ActorHurtEvent>(
-        [](ll::event::ActorHurtEvent& event) { handleActorHurt(event); }
-    );
+    hookRegistrar = std::make_unique<ll::memory::HookRegistrar<MobHurtHook>>();
 }
 
 void disableEnderDragonReflect() {
-    if (!actorHurtListener) {
-        return;
-    }
-
-    ll::event::EventBus::getInstance().removeListener(actorHurtListener);
-    actorHurtListener.reset();
+    hookRegistrar.reset();
 }
 
 } // namespace my_mod::event

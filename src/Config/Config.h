@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "ll/api/io/LogLevel.h"
 #include <string>
@@ -14,7 +14,7 @@ struct Config {
     float            enderDragonReflectRatio        = 0.25F;
     bool             enderDragonNaturalRegenEnabled = true;
     int              enderDragonRegenAmount         = 1;
-    int              enderDragonRegenIntervalTicks  = 20;
+    int              enderDragonRegenIntervalTicks  = 60;
 };
 
 } // namespace my_mod
