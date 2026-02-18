@@ -25,6 +25,14 @@ struct Config {
     bool enderDragonExplosionDamageReductionEnabled = true;
     // 末影龙爆炸减伤比例（0.0 ~ 1.0，0.6 表示减少 60% 爆炸伤害）
     float enderDragonExplosionDamageReductionRatio = 0.6F;
+    // 末影龙在 DragonStrafePlayerGoal 开始/结束时召唤闪电开关
+    bool enderDragonStrafeLightningEnabled = true;
+    // 每次开始/结束触发时召唤闪电数量
+    int enderDragonStrafeLightningCount = 1;
+    // 闪电落点相对目标的随机偏移半径（格）
+    float enderDragonStrafeLightningSpread = 2.5F;
+    // 回退目标搜索范围（当 Goal 内无有效目标时，按此范围找最近玩家）
+    float enderDragonStrafeLightningFallbackRange = 48.0F;
 
     // 末影龙自然回血开关
     bool enderDragonNaturalRegenEnabled = true;
