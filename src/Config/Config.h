@@ -39,6 +39,12 @@ struct Config {
     float enderDragonStrafeLightningSpread = 2.5F;
     // 回退目标搜索范围（当 Goal 内无有效目标时，按此范围找最近玩家）
     float enderDragonStrafeLightningFallbackRange = 48.0F;
+    // 末影龙火球自动追踪玩家开关
+    bool enderDragonHomingFireballEnabled = true;
+    // 末影龙火球追踪玩家搜索范围（格）
+    float enderDragonHomingFireballRange = 72.0F;
+    // 末影龙火球每 tick 转向强度（0.0 ~ 1.0）
+    float enderDragonHomingFireballTurnStrength = 0.2F;
 
     // 末影龙自然回血开关
     bool enderDragonNaturalRegenEnabled = true;
