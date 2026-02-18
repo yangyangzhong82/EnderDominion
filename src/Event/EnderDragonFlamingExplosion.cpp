@@ -108,7 +108,7 @@ void processPendingExplosions(Level& level) {
         return;
     }
 
-    float const radius = std::max(0.1F, cfg.enderDragonFlamingExplosionPower);
+    float const baseRadius = std::max(0.1F, cfg.enderDragonFlamingExplosionPower);
     pendingExplosions.erase(
         std::remove_if(
             pendingExplosions.begin(),
@@ -129,6 +129,16 @@ void processPendingExplosions(Level& level) {
                 }
                 if (sourceDragon && sourceDragon->getDimensionId() != playerActor->getDimensionId()) {
                     sourceDragon = nullptr;
+                }
+
+                float radius = baseRadius;
+                if (sourceDragon && cfg.enderDragonFlamingExplosionLowHealthBoostEnabled) {
+                    float const threshold = std::max(0.0F, cfg.enderDragonFlamingExplosionLowHealthThreshold);
+                    if (sourceDragon->getHealth() <= threshold) {
+                        float const multiplier =
+                            std::max(1.0F, cfg.enderDragonFlamingExplosionLowHealthPowerMultiplier);
+                        radius *= multiplier;
+                    }
                 }
 
                 level.explode(

@@ -21,6 +21,12 @@ struct Config {
     bool enderDragonReflectEnabled = true;
     // 反伤比例（按末影龙受到的伤害比例反弹给玩家）
     float enderDragonReflectRatio = 0.25F;
+    // 末影龙低血量增强反伤开关
+    bool enderDragonReflectLowHealthBoostEnabled = true;
+    // 末影龙血量低于等于该值时，启用增强反伤
+    float enderDragonReflectLowHealthThreshold = 80.0F;
+    // 低血量时的反伤比例（会与基础反伤比例取更大值）
+    float enderDragonReflectLowHealthRatio = 0.5F;
     // 末影龙爆炸减伤开关（方块爆炸/实体爆炸）
     bool enderDragonExplosionDamageReductionEnabled = true;
     // 末影龙爆炸减伤比例（0.0 ~ 1.0，0.6 表示减少 60% 爆炸伤害）
@@ -65,6 +71,12 @@ struct Config {
     int enderDragonFlamingExplosionDelayTicks = 40;
     // 爆炸威力（半径）
     float enderDragonFlamingExplosionPower = 3.0F;
+    // 末影龙低血量时增强龙焰爆炸威力开关
+    bool enderDragonFlamingExplosionLowHealthBoostEnabled = true;
+    // 末影龙血量低于等于该值时触发爆炸威力增强
+    float enderDragonFlamingExplosionLowHealthThreshold = 80.0F;
+    // 低血量时龙焰爆炸威力倍率（>= 1.0）
+    float enderDragonFlamingExplosionLowHealthPowerMultiplier = 1.5F;
     // 爆炸是否破坏方块
     bool enderDragonFlamingExplosionBreakBlocks = false;
     // 爆炸是否点燃火焰

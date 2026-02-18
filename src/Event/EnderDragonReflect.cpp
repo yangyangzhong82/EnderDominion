@@ -52,7 +52,13 @@ LL_TYPE_INSTANCE_HOOK(
         return result;
     }
 
-    float const reflectRatio  = cfg.enderDragonReflectRatio;
+    float reflectRatio = cfg.enderDragonReflectRatio;
+    if (cfg.enderDragonReflectLowHealthBoostEnabled) {
+        float const threshold = std::max(0.0F, cfg.enderDragonReflectLowHealthThreshold);
+        if (selfMob->getHealth() <= threshold) {
+            reflectRatio = std::max(reflectRatio, cfg.enderDragonReflectLowHealthRatio);
+        }
+    }
     float const reflectDamage = finalDamage * reflectRatio;
     if (reflectRatio <= 0.0F || reflectDamage <= 0.0F) {
         return result;
