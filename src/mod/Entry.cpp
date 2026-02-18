@@ -5,6 +5,7 @@
 #include "Event/EnderDragonAttackDebuff.h"
 #include "Event/EnderDragonFlamingExplosion.h"
 #include "Event/EnderDragonNaturalRegen.h"
+#include "Event/EnderDragonPlayerDeathHeal.h"
 #include "Event/EnderDragonReflect.h"
 #include "Event/EnderDragonSummonAggro.h"
 #include "I18n/I18n.h"
@@ -52,6 +53,7 @@ bool Entry::enable() {
     event::enableEnderDragonAttackDebuff();
     event::enableEnderDragonFlamingExplosion();
     event::enableEnderDragonNaturalRegen();
+    event::enableEnderDragonPlayerDeathHeal();
     event::enableEnderDragonReflect();
     event::enableEnderDragonSummonAggro();
     return true;
@@ -62,6 +64,7 @@ bool Entry::disable() {
     command::unregisterEnderDragonHealthCommand();
     event::disableEnderDragonAttackDebuff();
     event::disableEnderDragonFlamingExplosion();
+    event::disableEnderDragonPlayerDeathHeal();
     event::disableEnderDragonReflect();
     event::disableEnderDragonNaturalRegen();
     event::disableEnderDragonSummonAggro();

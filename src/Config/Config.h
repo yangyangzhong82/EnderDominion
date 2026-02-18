@@ -82,6 +82,11 @@ struct Config {
     // 主岛判定半径（以世界原点 XZ 为中心，单位：格）
     float endIslandRadius = 256.0F;
 
+    // 玩家在末地主岛死亡时，末影龙回血开关
+    bool endIslandPlayerDeathHealDragonEnabled = true;
+    // 每次触发恢复的生命值
+    int endIslandPlayerDeathHealDragonAmount = 20;
+
     // 可选 debuff 列表（随机等概率抽取，仅生效负面效果）
     // 支持常见名字与别名，例如: slowness, weakness, poison, wither, blindness
     std::vector<std::string> enderDragonAttackDebuffTypes{"slowness", "weakness", "poison", "wither", "blindness"};
