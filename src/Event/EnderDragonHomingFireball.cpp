@@ -82,7 +82,7 @@ void applyHoming(Fireball& fireball) {
         blendedDir = blendedDir.normalized();
     }
 
-    fireball._setPower(blendedDir * speed);
+    fireball.mBuiltInComponents->mStateVectorComponent->mPosDelta = blendedDir * speed;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -92,10 +92,10 @@ LL_TYPE_INSTANCE_HOOK(
     &Fireball::$normalTick,
     void
 ) {
+    origin();
     if (auto* self = this->thisFor<Fireball>()) {
         applyHoming(*self);
     }
-    origin();
 }
 } // namespace
 

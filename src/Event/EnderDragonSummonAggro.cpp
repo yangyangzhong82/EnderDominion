@@ -19,6 +19,7 @@
 #include <random>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 namespace my_mod::event {
@@ -70,6 +71,28 @@ std::vector<std::string> collectSummonMobTypes() {
         mobTypes.emplace_back("minecraft:enderman");
     }
     return mobTypes;
+}
+
+int countAliveSummonedMobs(Level& level, std::unordered_set<std::string> const& mobTypeSet) {
+    if (mobTypeSet.empty()) {
+        return 0;
+    }
+
+    int aliveCount = 0;
+    for (auto* actor : level.getRuntimeActorList()) {
+        if (!actor || !actor->isAlive()) {
+            continue;
+        }
+        if (actor->getDimensionId() != VanillaDimensions::TheEnd()) {
+            continue;
+        }
+
+        std::string normalizedType = trimAndNormalizeMobName(actor->getTypeName());
+        if (mobTypeSet.contains(normalizedType)) {
+            ++aliveCount;
+        }
+    }
+    return aliveCount;
 }
 
 bool isInTheEnd(Actor const& actor) { return actor.getDimensionId() == VanillaDimensions::TheEnd(); }
@@ -184,6 +207,7 @@ void processDragonSummon(Level& level) {
     float const playerRange = std::max(1.0F, cfg.enderDragonSummonPlayerRange);
     float const rangeSq     = playerRange * playerRange;
     int const   summonCount = std::clamp(cfg.enderDragonSummonCountPerWave, 1, 16);
+    int const   maxAlive    = std::max(0, cfg.enderDragonSummonMobMaxAlive);
 
     std::vector<Actor*> const players = collectCandidatePlayers(level, false, 0.0F);
     if (players.empty()) {
@@ -191,6 +215,11 @@ void processDragonSummon(Level& level) {
     }
 
     std::vector<std::string> const mobTypes = collectSummonMobTypes();
+    std::unordered_set<std::string> mobTypeSet(mobTypes.begin(), mobTypes.end());
+    int aliveCount = countAliveSummonedMobs(level, mobTypeSet);
+    if (maxAlive > 0 && aliveCount >= maxAlive) {
+        return;
+    }
 
     for (auto* actor : level.getRuntimeActorList()) {
         if (!actor || actor->getEntityTypeId() != ActorType::Dragon || !actor->isAlive()) {
@@ -205,12 +234,21 @@ void processDragonSummon(Level& level) {
             continue;
         }
 
+        int allowedSpawnCount = summonCount;
+        if (maxAlive > 0) {
+            allowedSpawnCount = std::min(allowedSpawnCount, maxAlive - aliveCount);
+            if (allowedSpawnCount <= 0) {
+                break;
+            }
+        }
+
         int spawnedCount = 0;
         int attempts     = 0;
-        int maxAttempts  = std::max(3, summonCount * 3);
-        while (spawnedCount < summonCount && attempts < maxAttempts) {
+        int maxAttempts  = std::max(3, allowedSpawnCount * 3);
+        while (spawnedCount < allowedSpawnCount && attempts < maxAttempts) {
             if (summonOneMobNearTarget(level, *actor, *targetPlayer, mobTypes)) {
                 ++spawnedCount;
+                ++aliveCount;
             }
             ++attempts;
         }

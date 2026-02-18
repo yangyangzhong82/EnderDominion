@@ -44,7 +44,7 @@ struct Config {
     // 末影龙火球追踪玩家搜索范围（格）
     float enderDragonHomingFireballRange = 72.0F;
     // 末影龙火球每 tick 转向强度（0.0 ~ 1.0）
-    float enderDragonHomingFireballTurnStrength = 0.2F;
+    float enderDragonHomingFireballTurnStrength = 0.5F;
 
     // 末影龙自然回血开关
     bool enderDragonNaturalRegenEnabled = true;
@@ -94,6 +94,8 @@ struct Config {
     int enderDragonSummonIntervalTicks = 120;
     // 每次召唤数量
     int enderDragonSummonCountPerWave = 2;
+    // 末影龙召唤怪物的全局存活上限（达到后不再召唤）
+    int enderDragonSummonMobMaxAlive = 40;
     // 末影龙搜索玩家范围（格）
     float enderDragonSummonPlayerRange = 40.0F;
     // 召唤怪物列表（支持完整标识符，如 minecraft:enderman）
