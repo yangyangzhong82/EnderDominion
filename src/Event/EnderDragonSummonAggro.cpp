@@ -79,6 +79,18 @@ bool isOnEndMainIsland(Vec3 const& pos, float islandRadiusSquared) {
     return distXZSquared <= islandRadiusSquared;
 }
 
+bool hasAliveDragonInTheEnd(Level& level) {
+    for (auto* actor : level.getRuntimeActorList()) {
+        if (!actor || actor->getEntityTypeId() != ActorType::Dragon || !actor->isAlive()) {
+            continue;
+        }
+        if (isInTheEnd(*actor)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<Actor*> collectCandidatePlayers(Level& level, bool requireMainIsland, float islandRadiusSquared) {
     std::vector<Actor*> players;
     for (auto* actor : level.getRuntimeActorList()) {
@@ -208,6 +220,9 @@ void processDragonSummon(Level& level) {
 void processEndIslandEndermanAggro(Level& level) {
     auto const& cfg = getConfig();
     if (!cfg.endIslandEndermanAggroEnabled) {
+        return;
+    }
+    if (!hasAliveDragonInTheEnd(level)) {
         return;
     }
 

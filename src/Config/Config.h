@@ -21,6 +21,10 @@ struct Config {
     bool enderDragonReflectEnabled = true;
     // 反伤比例（按末影龙受到的伤害比例反弹给玩家）
     float enderDragonReflectRatio = 0.25F;
+    // 末影龙爆炸减伤开关（方块爆炸/实体爆炸）
+    bool enderDragonExplosionDamageReductionEnabled = true;
+    // 末影龙爆炸减伤比例（0.0 ~ 1.0，0.6 表示减少 60% 爆炸伤害）
+    float enderDragonExplosionDamageReductionRatio = 0.6F;
 
     // 末影龙自然回血开关
     bool enderDragonNaturalRegenEnabled = true;

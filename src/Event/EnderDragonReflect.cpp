@@ -9,6 +9,7 @@
 #include "mc/world/actor/Mob.h"
 #include "mc/world/level/Level.h"
 #include "mod/Global.h"
+#include <algorithm>
 #include <memory>
 
 namespace my_mod::event {
@@ -27,23 +28,32 @@ LL_TYPE_INSTANCE_HOOK(
     bool                       knock,
     bool                       ignite
 ) {
-    bool const result = origin(source, damage, knock, ignite);
+    auto* selfMob = this->thisFor<Mob>();
+    if (!selfMob || selfMob->getEntityTypeId() != ActorType::Dragon) {
+        return origin(source, damage, knock, ignite);
+    }
+
+    float finalDamage = std::max(0.0F, damage);
+    const auto& cfg   = getConfig();
+    if (cfg.enderDragonExplosionDamageReductionEnabled) {
+        auto const cause = source.mCause;
+        if (cause == SharedTypes::Legacy::ActorDamageCause::BlockExplosion
+            || cause == SharedTypes::Legacy::ActorDamageCause::EntityExplosion) {
+            float const reduction = std::clamp(cfg.enderDragonExplosionDamageReductionRatio, 0.0F, 1.0F);
+            finalDamage           = finalDamage * (1.0F - reduction);
+        }
+    }
+
+    bool const result = origin(source, finalDamage, knock, ignite);
     if (!result) {
         return result;
     }
-
-    auto* selfMob = this->thisFor<Mob>();
-    if (!selfMob || selfMob->getEntityTypeId() != ActorType::Dragon) {
-        return result;
-    }
-
-    const auto& cfg = getConfig();
     if (!cfg.enderDragonReflectEnabled) {
         return result;
     }
 
     float const reflectRatio  = cfg.enderDragonReflectRatio;
-    float const reflectDamage = damage * reflectRatio;
+    float const reflectDamage = finalDamage * reflectRatio;
     if (reflectRatio <= 0.0F || reflectDamage <= 0.0F) {
         return result;
     }
