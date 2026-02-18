@@ -58,6 +58,26 @@ struct Config {
     // 爆炸是否点燃火焰
     bool enderDragonFlamingExplosionFire = false;
 
+    // 末影龙定时召唤怪物攻击玩家开关
+    bool enderDragonSummonMobEnabled = true;
+    // 召唤间隔（tick）
+    int enderDragonSummonIntervalTicks = 120;
+    // 每次召唤数量
+    int enderDragonSummonCountPerWave = 2;
+    // 末影龙搜索玩家范围（格）
+    float enderDragonSummonPlayerRange = 40.0F;
+    // 召唤怪物列表（支持完整标识符，如 minecraft:enderman）
+    std::vector<std::string> enderDragonSummonMobTypes{"minecraft:enderman"};
+
+    // 末地主岛末影人强制仇恨玩家开关
+    bool endIslandEndermanAggroEnabled = true;
+    // 末影人仇恨刷新间隔（tick）
+    int endIslandEndermanAggroIntervalTicks = 20;
+    // 末影人索敌范围（格）
+    float endIslandEndermanAggroRange = 48.0F;
+    // 主岛判定半径（以世界原点 XZ 为中心，单位：格）
+    float endIslandRadius = 256.0F;
+
     // 可选 debuff 列表（随机等概率抽取，仅生效负面效果）
     // 支持常见名字与别名，例如: slowness, weakness, poison, wither, blindness
     std::vector<std::string> enderDragonAttackDebuffTypes{"slowness", "weakness", "poison", "wither", "blindness"};

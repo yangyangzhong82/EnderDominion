@@ -6,6 +6,7 @@
 #include "Event/EnderDragonFlamingExplosion.h"
 #include "Event/EnderDragonNaturalRegen.h"
 #include "Event/EnderDragonReflect.h"
+#include "Event/EnderDragonSummonAggro.h"
 #include "I18n/I18n.h"
 #include "mod/Global.h"
 #include "ll/api/mod/RegisterHelper.h"
@@ -52,6 +53,7 @@ bool Entry::enable() {
     event::enableEnderDragonFlamingExplosion();
     event::enableEnderDragonNaturalRegen();
     event::enableEnderDragonReflect();
+    event::enableEnderDragonSummonAggro();
     return true;
 }
 
@@ -62,6 +64,7 @@ bool Entry::disable() {
     event::disableEnderDragonFlamingExplosion();
     event::disableEnderDragonReflect();
     event::disableEnderDragonNaturalRegen();
+    event::disableEnderDragonSummonAggro();
     getLogger().info(tr("plugin.unloaded"));
     return true;
 }
