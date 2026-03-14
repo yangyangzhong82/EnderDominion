@@ -31,6 +31,12 @@ struct Config {
     bool enderDragonExplosionDamageReductionEnabled = true;
     // 末影龙爆炸减伤比例（0.0 ~ 1.0，0.6 表示减少 60% 爆炸伤害）
     float enderDragonExplosionDamageReductionRatio = 0.6F;
+    // 末影龙高额伤害减免开关（仅对超过阈值的部分生效）
+    bool enderDragonHighDamageReductionEnabled = true;
+    // 高额伤害阈值（伤害值 <= 阈值时不触发此减免）
+    float enderDragonHighDamageReductionThreshold = 10.0F;
+    // 超出阈值部分的减免比例（0.0 ~ 1.0，0.5 表示超出部分减免 50%）
+    float enderDragonHighDamageReductionRatio = 0.5F;
     // 末影龙在 DragonStrafePlayerGoal 开始/结束时召唤闪电开关
     bool enderDragonStrafeLightningEnabled = true;
     // 每次开始/结束触发时召唤闪电数量
@@ -117,7 +123,8 @@ struct Config {
 
     // 可选 debuff 列表（随机等概率抽取，仅生效负面效果）
     // 支持常见名字与别名，例如: slowness, weakness, poison, wither, blindness
-    std::vector<std::string> enderDragonAttackDebuffTypes{"slowness", "weakness", "poison", "wither", "blindness"};
+    std::vector<std::string>
+        enderDragonAttackDebuffTypes{"slowness", "weakness", "poison", "wither", "blindness", "hunger"};
 };
 
 } // namespace my_mod

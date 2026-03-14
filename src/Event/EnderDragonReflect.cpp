@@ -43,6 +43,14 @@ LL_TYPE_INSTANCE_HOOK(
             finalDamage           = finalDamage * (1.0F - reduction);
         }
     }
+    if (cfg.enderDragonHighDamageReductionEnabled) {
+        float const threshold = std::max(0.0F, cfg.enderDragonHighDamageReductionThreshold);
+        float const reduction = std::clamp(cfg.enderDragonHighDamageReductionRatio, 0.0F, 1.0F);
+        if (finalDamage > threshold && reduction > 0.0F) {
+            float const exceed = finalDamage - threshold;
+            finalDamage        = threshold + exceed * (1.0F - reduction);
+        }
+    }
 
     bool const result = origin(source, finalDamage, knock, ignite);
     if (!result) {

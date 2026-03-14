@@ -25,7 +25,7 @@ namespace my_mod::event {
 namespace {
 std::unique_ptr<ll::memory::HookRegistrar<class DragonStrafeSetTargetHook>> hookRegistrar;
 ll::event::ListenerPtr                                                      levelTickListener;
-int                                                                          dragonPeriodicDebuffTickCounter = 0;
+int                                                                         dragonPeriodicDebuffTickCounter = 0;
 
 using EffectGetter = MobEffect*& (*)();
 
@@ -64,25 +64,25 @@ MobEffect* resolveEffect(std::string_view rawName) {
         return nullptr;
     }
 
-    static constexpr std::array<EffectAlias, 17> aliases{{
-        {"slowness", &MobEffect::MOVEMENT_SLOWDOWN},
-        {"movement_slowdown", &MobEffect::MOVEMENT_SLOWDOWN},
-        {"mining_fatigue", &MobEffect::DIG_SLOWDOWN},
-        {"dig_slowdown", &MobEffect::DIG_SLOWDOWN},
-        {"weakness", &MobEffect::WEAKNESS},
-        {"poison", &MobEffect::POISON},
-        {"wither", &MobEffect::WITHER},
-        {"blindness", &MobEffect::BLINDNESS},
-        {"nausea", &MobEffect::CONFUSION},
-        {"confusion", &MobEffect::CONFUSION},
-        {"hunger", &MobEffect::HUNGER},
-        {"darkness", &MobEffect::DARKNESS},
-        {"levitation", &MobEffect::LEVITATION},
-        {"bad_omen", &MobEffect::BAD_OMEN},
-        {"raid_omen", &MobEffect::RAID_OMEN},
-        {"trial_omen", &MobEffect::TRIAL_OMEN},
-        {"fatal_poison", &MobEffect::FATAL_POISON}
-    }};
+    static constexpr std::array<EffectAlias, 17> aliases{
+        {{"slowness", &MobEffect::MOVEMENT_SLOWDOWN},
+         {"movement_slowdown", &MobEffect::MOVEMENT_SLOWDOWN},
+         {"mining_fatigue", &MobEffect::DIG_SLOWDOWN},
+         {"dig_slowdown", &MobEffect::DIG_SLOWDOWN},
+         {"weakness", &MobEffect::WEAKNESS},
+         {"poison", &MobEffect::POISON},
+         {"wither", &MobEffect::WITHER},
+         {"blindness", &MobEffect::BLINDNESS},
+         {"nausea", &MobEffect::CONFUSION},
+         {"confusion", &MobEffect::CONFUSION},
+         {"hunger", &MobEffect::HUNGER},
+         {"darkness", &MobEffect::DARKNESS},
+         {"levitation", &MobEffect::LEVITATION},
+         {"bad_omen", &MobEffect::BAD_OMEN},
+         {"raid_omen", &MobEffect::RAID_OMEN},
+         {"trial_omen", &MobEffect::TRIAL_OMEN},
+         {"fatal_poison", &MobEffect::FATAL_POISON}}
+    };
 
     std::string const name = normalizeEffectName(rawName);
     if (name.empty()) {
@@ -102,13 +102,8 @@ MobEffect* resolveEffect(std::string_view rawName) {
 }
 
 std::vector<MobEffect*> collectConfiguredDebuffs() {
-    static constexpr std::array<std::string_view, 5> defaultDebuffNames{
-        "slowness",
-        "weakness",
-        "poison",
-        "wither",
-        "blindness"
-    };
+    static constexpr std::array<std::string_view, 6>
+        defaultDebuffNames{"slowness", "weakness", "poison", "wither", "blindness", "hunger"};
 
     const auto& cfg = getConfig();
 
@@ -160,11 +155,11 @@ Actor* findNearestPlayerInRange(Level& level, Actor const& center, float rangeSq
             continue;
         }
 
-        Vec3 const pos = actor->getPosition();
-        float const dx = pos.x - centerPos.x;
-        float const dy = pos.y - centerPos.y;
-        float const dz = pos.z - centerPos.z;
-        float const d2 = dx * dx + dy * dy + dz * dz;
+        Vec3 const  pos = actor->getPosition();
+        float const dx  = pos.x - centerPos.x;
+        float const dy  = pos.y - centerPos.y;
+        float const dz  = pos.z - centerPos.z;
+        float const d2  = dx * dx + dy * dy + dz * dz;
         if (d2 <= bestDistSq) {
             bestDistSq    = d2;
             nearestPlayer = actor;
