@@ -125,6 +125,66 @@ struct Config {
     // 支持常见名字与别名，例如: slowness, weakness, poison, wither, blindness
     std::vector<std::string>
         enderDragonAttackDebuffTypes{"slowness", "weakness", "poison", "wither", "blindness", "hunger"};
+
+    // ─── 末影龙落地冲击波 ───
+    // 末影龙降落到喷泉时产生冲击波
+    bool  enderDragonLandingShockwaveEnabled           = true;
+    // 冲击波影响范围（格）
+    float enderDragonLandingShockwaveRange              = 16.0F;
+    // 冲击波直接伤害
+    float enderDragonLandingShockwaveDamage             = 6.0F;
+    // 水平击退强度
+    float enderDragonLandingShockwaveKnockbackStrength  = 1.8F;
+    // 向上抛飞强度
+    float enderDragonLandingShockwaveUpwardStrength     = 0.6F;
+    // 缓慢效果持续时间（tick）
+    int   enderDragonLandingShockwaveSlownessTicks      = 80;
+    // 缓慢效果等级（0 = I, 1 = II）
+    int   enderDragonLandingShockwaveSlownessLevel      = 1;
+
+    // ─── 末影龙瞬移冲刺攻击 ───
+    // 末影龙定期瞬移到玩家身后发动突袭
+    bool  enderDragonTeleportDashEnabled           = true;
+    // 冲刺冷却间隔（tick）
+    int   enderDragonTeleportDashCooldownTicks     = 200;
+    // 警告到执行的延迟（tick）
+    int   enderDragonTeleportDashWarningTicks      = 30;
+    // 搜索玩家范围（格）
+    float enderDragonTeleportDashRange             = 48.0F;
+    // 冲刺伤害
+    float enderDragonTeleportDashDamage            = 8.0F;
+    // 击退强度
+    float enderDragonTeleportDashKnockbackStrength = 1.5F;
+    // 落点伤害范围（格）
+    float enderDragonTeleportDashHitRange          = 6.0F;
+    // 传送到玩家身后的距离（格）
+    float enderDragonTeleportDashDistance           = 5.0F;
+
+    // ─── 末地水晶增强 ───
+    // 水晶被摧毁时产生额外效果
+    bool  enderDragonCrystalEnhanceEnabled                = true;
+    // 水晶被毁时额外爆炸威力
+    float enderDragonCrystalDestroyExplosionPower          = 4.0F;
+    // 额外爆炸是否破坏方块
+    bool  enderDragonCrystalDestroyExplosionBreakBlocks    = false;
+    // 额外爆炸是否点燃火焰
+    bool  enderDragonCrystalDestroyExplosionFire           = false;
+    // 水晶被毁时召唤守卫怪物开关
+    bool  enderDragonCrystalDestroySpawnMobEnabled         = true;
+    // 每次召唤怪物数量
+    int   enderDragonCrystalDestroySpawnMobCount           = 2;
+    // 召唤怪物类型列表
+    std::vector<std::string> enderDragonCrystalDestroySpawnMobTypes{"minecraft:enderman"};
+    // 水晶被毁时给附近玩家施加负面效果开关
+    bool  enderDragonCrystalDestroyDebuffEnabled           = true;
+    // 负面效果影响范围（格）
+    float enderDragonCrystalDestroyDebuffRange             = 16.0F;
+    // 负面效果持续时间（tick）
+    int   enderDragonCrystalDestroyDebuffTicks             = 100;
+    // 负面效果等级（0 = I, 1 = II）
+    int   enderDragonCrystalDestroyDebuffLevel             = 0;
+    // 水晶被毁时末影龙愤怒回血量
+    int   enderDragonCrystalDestroyDragonHealAmount        = 10;
 };
 
 } // namespace my_mod

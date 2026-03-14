@@ -3,13 +3,16 @@
 #include "Command/EnderDragonHealthCommand.h"
 #include "Config/ConfigManager.h"
 #include "Event/EnderDragonAttackDebuff.h"
+#include "Event/EnderDragonCrystalEnhance.h"
 #include "Event/EnderDragonFlamingExplosion.h"
 #include "Event/EnderDragonHomingFireball.h"
+#include "Event/EnderDragonLandingShockwave.h"
 #include "Event/EnderDragonNaturalRegen.h"
 #include "Event/EnderDragonPlayerDeathHeal.h"
 #include "Event/EnderDragonReflect.h"
 #include "Event/EnderDragonStrafeLightning.h"
 #include "Event/EnderDragonSummonAggro.h"
+#include "Event/EnderDragonTeleportDash.h"
 #include "I18n/I18n.h"
 #include "mod/Global.h"
 #include "ll/api/mod/RegisterHelper.h"
@@ -53,13 +56,16 @@ bool Entry::enable() {
     getSelf().getLogger().debug("Enabling...");
     command::registerEnderDragonHealthCommand();
     event::enableEnderDragonAttackDebuff();
+    event::enableEnderDragonCrystalEnhance();
     event::enableEnderDragonFlamingExplosion();
     event::enableEnderDragonHomingFireball();
+    event::enableEnderDragonLandingShockwave();
     event::enableEnderDragonNaturalRegen();
     event::enableEnderDragonPlayerDeathHeal();
     event::enableEnderDragonReflect();
     event::enableEnderDragonStrafeLightning();
     event::enableEnderDragonSummonAggro();
+    event::enableEnderDragonTeleportDash();
     return true;
 }
 
@@ -67,13 +73,16 @@ bool Entry::disable() {
     getSelf().getLogger().debug("Disabling...");
     command::unregisterEnderDragonHealthCommand();
     event::disableEnderDragonAttackDebuff();
+    event::disableEnderDragonCrystalEnhance();
     event::disableEnderDragonFlamingExplosion();
     event::disableEnderDragonHomingFireball();
+    event::disableEnderDragonLandingShockwave();
     event::disableEnderDragonPlayerDeathHeal();
     event::disableEnderDragonReflect();
     event::disableEnderDragonStrafeLightning();
     event::disableEnderDragonNaturalRegen();
     event::disableEnderDragonSummonAggro();
+    event::disableEnderDragonTeleportDash();
     getLogger().info(tr("plugin.unloaded"));
     return true;
 }
