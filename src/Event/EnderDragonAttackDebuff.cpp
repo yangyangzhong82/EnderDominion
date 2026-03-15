@@ -1,5 +1,6 @@
 #include "Event/EnderDragonAttackDebuff.h"
 
+#include "czmoney/money_api.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/world/LevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
