@@ -3,6 +3,8 @@
 #include "Command/EnderDragonHealthCommand.h"
 #include "Config/ConfigManager.h"
 #include "Event/EnderDragonAttackDebuff.h"
+#include "Event/EnderDragonBreathBarrage.h"
+#include "Event/EnderDragonBreathEnhance.h"
 #include "Event/EnderDragonCrystalEnhance.h"
 #include "Event/EnderDragonFlamingExplosion.h"
 #include "Event/EnderDragonHomingFireball.h"
@@ -56,6 +58,8 @@ bool Entry::enable() {
     getSelf().getLogger().debug("Enabling...");
     command::registerEnderDragonHealthCommand();
     event::enableEnderDragonAttackDebuff();
+    event::enableEnderDragonBreathBarrage();
+    event::enableEnderDragonBreathEnhance();
     event::enableEnderDragonCrystalEnhance();
     event::enableEnderDragonFlamingExplosion();
     event::enableEnderDragonHomingFireball();
@@ -73,6 +77,8 @@ bool Entry::disable() {
     getSelf().getLogger().debug("Disabling...");
     command::unregisterEnderDragonHealthCommand();
     event::disableEnderDragonAttackDebuff();
+    event::disableEnderDragonBreathBarrage();
+    event::disableEnderDragonBreathEnhance();
     event::disableEnderDragonCrystalEnhance();
     event::disableEnderDragonFlamingExplosion();
     event::disableEnderDragonHomingFireball();

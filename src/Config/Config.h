@@ -185,6 +185,48 @@ struct Config {
     int   enderDragonCrystalDestroyDebuffLevel             = 0;
     // 水晶被毁时末影龙愤怒回血量
     int   enderDragonCrystalDestroyDragonHealAmount        = 10;
+
+    // ─── 龙息弹幕 ───
+    // 龙焰阶段发射多方向龙息火球弹幕
+    bool  enderDragonBreathBarrageEnabled                       = true;
+    // 每波发射火球数量
+    int   enderDragonBreathBarrageCount                         = 4;
+    // 发射间隔（tick）
+    int   enderDragonBreathBarrageIntervalTicks                 = 20;
+    // 火球速度
+    float enderDragonBreathBarrageSpeed                         = 1.0F;
+    // 弹幕模式: "fan" 扇形, "spiral" 螺旋, "ring" 环形
+    std::string enderDragonBreathBarragePattern                 = "spiral";
+    // 扇形展开角度（度，仅 fan 模式）
+    float enderDragonBreathBarrageFanAngle                      = 90.0F;
+    // 同时存在的龙息火球上限（防止粒子过多卡顿）
+    int   enderDragonBreathBarrageMaxAlive                      = 12;
+    // 低血量增强
+    bool  enderDragonBreathBarrageLowHealthBoostEnabled         = true;
+    float enderDragonBreathBarrageLowHealthThreshold            = 80.0F;
+    // 低血量时额外增加的火球数量
+    int   enderDragonBreathBarrageLowHealthExtraCount           = 2;
+
+    // ─── 龙息云增强 ───
+    // 增强龙息云（AreaEffectCloud）的范围、持续时间和效果
+    bool  enderDragonBreathEnhanceEnabled                       = true;
+    // 龙息云半径倍率
+    float enderDragonBreathEnhanceRadiusMultiplier              = 1.5F;
+    // 龙息云持续时间倍率
+    float enderDragonBreathEnhanceDurationMultiplier            = 1.5F;
+    // 龙息云额外效果列表
+    std::vector<std::string> enderDragonBreathEnhanceExtraEffects{"wither", "poison"};
+    // 额外效果等级（0 = I, 1 = II）
+    int   enderDragonBreathEnhanceExtraEffectLevel              = 0;
+    // 额外效果持续时间（tick）
+    int   enderDragonBreathEnhanceExtraEffectTicks              = 100;
+    // 龙息云额外伤害
+    float enderDragonBreathEnhanceExtraDamage                   = 2.0F;
+    // 低血量增强
+    bool  enderDragonBreathEnhanceLowHealthBoostEnabled         = true;
+    float enderDragonBreathEnhanceLowHealthThreshold            = 80.0F;
+    // 低血量时半径额外倍率
+    float enderDragonBreathEnhanceLowHealthRadiusMultiplier     = 1.5F;
 };
 
 } // namespace my_mod
