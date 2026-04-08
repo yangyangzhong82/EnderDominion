@@ -1,11 +1,14 @@
 #include "Event/EnderDragonReflect.h"
 
 #include "czmoney/money_api.h"
+#include "I18n/I18n.h"
+#include "fmt/format.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorDamageByActorSource.h"
+#include "mc/world/actor/ActorHurtResult.h"
 #include "mc/world/actor/ActorDamageSource.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/Mob.h"
@@ -29,6 +32,7 @@ std::unique_ptr<ll::memory::HookRegistrar<class EnderDragonDieHook>> dragonDieHo
 
 struct DragonDamageContribution {
     std::string playerName;
+    ActorUniqueID playerUid;
     double      damage = 0.0;
 };
 
@@ -87,7 +91,18 @@ void recordDragonDamage(ActorUniqueID dragonUid, Player& player, double damage) 
 
     auto& contribution = dragonDamageContributions[dragonUid][player.getUuid().asString()];
     contribution.playerName = player.getRealName();
+    contribution.playerUid  = player.getOrCreateUniqueID();
     contribution.damage += damage;
+}
+
+void notifyPlayerReward(ActorUniqueID playerUid, std::string_view message) {
+    ll::service::getLevel().transform([&](Level& level) {
+        Actor* playerActor = level.fetchEntity(playerUid, false);
+        if (playerActor && playerActor->hasType(ActorType::Player)) {
+            static_cast<Player*>(playerActor)->sendMessage(message);
+        }
+        return true;
+    });
 }
 
 void settleDragonKillReward(ActorUniqueID dragonUid) {
@@ -151,7 +166,17 @@ void settleDragonKillReward(ActorUniqueID dragonUid) {
                 cfg.enderDragonKillReward.currencyType,
                 moneyApiResultToString(result)
             );
+            continue;
         }
+
+        notifyPlayerReward(
+            contribution.playerUid,
+            tr(
+                "reward.ender_dragon_kill_money",
+                fmt::format("{:.2f}", reward),
+                cfg.enderDragonKillReward.currencyType
+            )
+        );
     }
 }
 
@@ -178,7 +203,7 @@ LL_TYPE_INSTANCE_HOOK(
     ll::memory::HookPriority::Normal,
     Mob,
     &Mob::$_hurt,
-    bool,
+    ActorHurtResult,
     ::ActorDamageSource const& source,
     float                      damage,
     bool                       knock,
@@ -211,7 +236,7 @@ LL_TYPE_INSTANCE_HOOK(
         }
     }
 
-    bool const result = origin(source, finalDamage, knock, ignite);
+    ActorHurtResult const result = origin(source, finalDamage, knock, ignite);
     if (!result) {
         return result;
     }

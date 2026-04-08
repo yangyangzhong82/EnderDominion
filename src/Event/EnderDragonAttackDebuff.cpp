@@ -2,7 +2,7 @@
 
 #include "czmoney/money_api.h"
 #include "ll/api/event/EventBus.h"
-#include "ll/api/event/world/LevelTickEvent.h"
+#include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/Actor.h"
@@ -271,8 +271,8 @@ void enableEnderDragonAttackDebuff() {
     }
 
     if (!levelTickListener) {
-        levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::LevelTickEvent>(
-            [](ll::event::LevelTickEvent&) {
+        levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(
+            [](ll::event::ServerLevelTickEvent&) {
                 ll::service::getLevel().transform([&](Level& level) {
                     applyPeriodicDragonDebuff(level);
                     return true;

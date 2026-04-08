@@ -1,7 +1,7 @@
 #include "Event/EnderDragonSummonAggro.h"
 
 #include "ll/api/event/EventBus.h"
-#include "ll/api/event/world/LevelTickEvent.h"
+#include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorDefinitionIdentifier.h"
@@ -139,11 +139,11 @@ Actor* findNearestPlayerInRange(std::vector<Actor*> const& players, Vec3 const& 
         if (!player) {
             continue;
         }
-        Vec3 const pos = player->getPosition();
-        float const dx = pos.x - center.x;
-        float const dy = pos.y - center.y;
-        float const dz = pos.z - center.z;
-        float const d2 = dx * dx + dy * dy + dz * dz;
+        Vec3 const  pos = player->getPosition();
+        float const dx  = pos.x - center.x;
+        float const dy  = pos.y - center.y;
+        float const dz  = pos.z - center.z;
+        float const d2  = dx * dx + dy * dy + dz * dz;
         if (d2 <= bestDistSq) {
             bestDistSq    = d2;
             nearestPlayer = player;
@@ -158,7 +158,7 @@ Mob* summonOneMobNearTarget(Level& level, Actor& dragon, Actor& target, std::vec
         return nullptr;
     }
 
-    static thread_local std::mt19937 rng{std::random_device{}()};
+    static thread_local std::mt19937      rng{std::random_device{}()};
     std::uniform_int_distribution<size_t> mobTypeDist(0, mobTypes.size() - 1);
     std::uniform_real_distribution<float> angleDist(0.0F, std::numbers::pi_v<float> * 2.0F);
     std::uniform_real_distribution<float> radiusDist(3.0F, 7.0F);
@@ -168,11 +168,11 @@ Mob* summonOneMobNearTarget(Level& level, Actor& dragon, Actor& target, std::vec
     BlockSource& region  = target.getDimensionBlockSource();
 
     for (int attempt = 0; attempt < 6; ++attempt) {
-        std::string const& mobName = mobTypes[mobTypeDist(rng)];
+        std::string const&        mobName = mobTypes[mobTypeDist(rng)];
         ActorDefinitionIdentifier id(mobName);
 
-        float const angle  = angleDist(rng);
-        float const radius = radiusDist(rng);
+        float const angle     = angleDist(rng);
+        float const radius    = radiusDist(rng);
         Vec3 const  targetPos = target.getPosition();
         Vec3        spawnPos{
             targetPos.x + std::cos(angle) * radius,
@@ -214,9 +214,9 @@ void processDragonSummon(Level& level) {
         return;
     }
 
-    std::vector<std::string> const mobTypes = collectSummonMobTypes();
+    std::vector<std::string> const  mobTypes = collectSummonMobTypes();
     std::unordered_set<std::string> mobTypeSet(mobTypes.begin(), mobTypes.end());
-    int aliveCount = countAliveSummonedMobs(level, mobTypeSet);
+    int                             aliveCount = countAliveSummonedMobs(level, mobTypeSet);
     if (maxAlive > 0 && aliveCount >= maxAlive) {
         return;
     }
@@ -270,10 +270,10 @@ void processEndIslandEndermanAggro(Level& level) {
     }
     endermanAggroTickCounter = 0;
 
-    float const aggroRange      = std::max(1.0F, cfg.endIslandEndermanAggroRange);
-    float const aggroRangeSq    = aggroRange * aggroRange;
-    float const islandRadius    = std::max(1.0F, cfg.endIslandRadius);
-    float const islandRadiusSq  = islandRadius * islandRadius;
+    float const aggroRange     = std::max(1.0F, cfg.endIslandEndermanAggroRange);
+    float const aggroRangeSq   = aggroRange * aggroRange;
+    float const islandRadius   = std::max(1.0F, cfg.endIslandRadius);
+    float const islandRadiusSq = islandRadius * islandRadius;
 
     std::vector<Actor*> const players = collectCandidatePlayers(level, true, islandRadiusSq);
     if (players.empty()) {
@@ -310,8 +310,8 @@ void enableEnderDragonSummonAggro() {
         return;
     }
 
-    levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::LevelTickEvent>(
-        [](ll::event::LevelTickEvent&) {
+    levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(
+        [](ll::event::ServerLevelTickEvent& event) {
             ll::service::getLevel().transform([&](Level& level) {
                 onLevelTick(level);
                 return true;

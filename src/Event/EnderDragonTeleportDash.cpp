@@ -1,22 +1,23 @@
 #include "Event/EnderDragonTeleportDash.h"
 
 #include "ll/api/event/EventBus.h"
-#include "ll/api/event/world/LevelTickEvent.h"
+#include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/deps/ecs/gamerefs_entity/GameRefsEntity.h"
 #include "mc/legacy/ActorUniqueID.h"
+#include "mc/network/packet/TextPacket.h"
+#include "mc/network/packet/TextPacketType.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorDamageByActorSource.h"
 #include "mc/world/actor/ActorDefinitionIdentifier.h"
 #include "mc/world/actor/ActorFactory.h"
+#include "mc/world/actor/ActorHurtResult.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
-#include "mc/network/packet/TextPacket.h"
-#include "mc/network/packet/TextPacketType.h"
 #include "mod/Global.h"
 #include <algorithm>
 #include <cmath>
@@ -25,11 +26,12 @@
 #include <utility>
 #include <vector>
 
+
 namespace my_mod::event {
 
 namespace {
 ll::event::ListenerPtr levelTickListener;
-int                    globalTickCounter = 0;
+int                    globalTickCounter   = 0;
 int                    dashCooldownCounter = 0;
 
 struct PendingDash {
@@ -114,25 +116,20 @@ void tryQueueDash(Level& level) {
     }
 
     // 随机选一名玩家作为目标
-    static thread_local std::mt19937 rng{std::random_device{}()};
+    static thread_local std::mt19937      rng{std::random_device{}()};
     std::uniform_int_distribution<size_t> pickDist(0, players.size() - 1);
-    Actor* target = players[pickDist(rng)];
+    Actor*                                target = players[pickDist(rng)];
     if (!target) {
         return;
     }
 
     // 发送警告
-    sendActionbarTip(
-        *static_cast<Player*>(target),
-        "[EnderDominion] The dragon is locking onto you..."
-    );
+    sendActionbarTip(*static_cast<Player*>(target), "[EnderDominion] The dragon is locking onto you...");
 
     int const delay = std::max(0, cfg.enderDragonTeleportDashWarningTicks);
-    pendingDashes.push_back(PendingDash{
-        dragon->getOrCreateUniqueID(),
-        target->getOrCreateUniqueID(),
-        globalTickCounter + delay
-    });
+    pendingDashes.push_back(
+        PendingDash{dragon->getOrCreateUniqueID(), target->getOrCreateUniqueID(), globalTickCounter + delay}
+    );
 }
 
 void processPendingDashes(Level& level) {
@@ -145,7 +142,7 @@ void processPendingDashes(Level& level) {
     float const knockback    = std::max(0.0F, cfg.enderDragonTeleportDashKnockbackStrength);
     float const hitRange     = std::max(1.0F, cfg.enderDragonTeleportDashHitRange);
     float const hitRangeSq   = hitRange * hitRange;
-    float const dashDistance  = std::max(1.0F, cfg.enderDragonTeleportDashDistance);
+    float const dashDistance = std::max(1.0F, cfg.enderDragonTeleportDashDistance);
 
     pendingDashes.erase(
         std::remove_if(
@@ -170,8 +167,8 @@ void processPendingDashes(Level& level) {
                 }
 
                 // 根据玩家朝向计算身后位置
-                Vec2 const  rot     = target->getRotation();
-                float const yawRad  = rot.y * (std::numbers::pi_v<float> / 180.0F);
+                Vec2 const  rot    = target->getRotation();
+                float const yawRad = rot.y * (std::numbers::pi_v<float> / 180.0F);
                 // 玩家面朝方向
                 float const facingX = -std::sin(yawRad);
                 float const facingZ = std::cos(yawRad);
@@ -187,11 +184,7 @@ void processPendingDashes(Level& level) {
                 {
                     ActorDefinitionIdentifier lightningId("minecraft:lightning_bolt");
                     BlockSource&              region = dragon->getDimensionBlockSource();
-                    auto bolt = level.getActorFactory().createSummonedActor(
-                        lightningId,
-                        dragon,
-                        dragon->getPosition()
-                    );
+                    auto bolt = level.getActorFactory().createSummonedActor(lightningId, dragon, dragon->getPosition());
                     if (bolt) {
                         level.addEntity(region, std::move(bolt));
                     }
@@ -204,11 +197,7 @@ void processPendingDashes(Level& level) {
                 {
                     ActorDefinitionIdentifier lightningId("minecraft:lightning_bolt");
                     BlockSource&              region = dragon->getDimensionBlockSource();
-                    auto bolt = level.getActorFactory().createSummonedActor(
-                        lightningId,
-                        dragon,
-                        dashPos
-                    );
+                    auto bolt = level.getActorFactory().createSummonedActor(lightningId, dragon, dashPos);
                     if (bolt) {
                         level.addEntity(region, std::move(bolt));
                     }
@@ -245,11 +234,7 @@ void processPendingDashes(Level& level) {
                     if (knockback > 0.0F && d2 > 0.001F) {
                         float const dist    = std::sqrt(d2);
                         float const invDist = 1.0F / dist;
-                        Vec3 impulse{
-                            dx * invDist * knockback,
-                            0.4F,
-                            dz * invDist * knockback
-                        };
+                        Vec3        impulse{dx * invDist * knockback, 0.4F, dz * invDist * knockback};
                         actor->applyImpulse(impulse);
                     }
                 }
@@ -268,8 +253,8 @@ void enableEnderDragonTeleportDash() {
         return;
     }
 
-    levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::LevelTickEvent>(
-        [](ll::event::LevelTickEvent&) {
+    levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(
+        [](ll::event::ServerLevelTickEvent&) {
             ++globalTickCounter;
             ll::service::getLevel().transform([&](Level& level) {
                 tryQueueDash(level);

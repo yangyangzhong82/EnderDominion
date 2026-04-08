@@ -11,6 +11,7 @@
     "config.regenerate_hint": "You can also delete your config.json to generate a new one with all keys on next startup.",
     "config.save_error": "Failed to save config file: {}",
     "error.generic": "Error occurred: {}",
+    "reward.ender_dragon_kill_money": "[EnderDominion] You received {} {} for killing the Ender Dragon.",
     "i18n.lang_dir_not_found": "Language directory not found, created: {}",
     "i18n.loaded": "Loaded language: {}",
     "i18n.load_error": "Failed to load language file {}: {}",

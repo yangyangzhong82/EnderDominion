@@ -1,7 +1,7 @@
 #include "Event/EnderDragonBreathBarrage.h"
 
 #include "ll/api/event/EventBus.h"
-#include "ll/api/event/world/LevelTickEvent.h"
+#include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/legacy/ActorUniqueID.h"
@@ -94,13 +94,13 @@ void fireBarrageWave(Level& level, EnderDragon& dragon, BarrageState& state) {
 
     Vec3 const  dragonPos = dragon.getPosition();
     Vec3 const  firePos{dragonPos.x, dragonPos.y + 2.0F, dragonPos.z};
-    Vec3 const  headLook = dragon.getHeadLookVector(1.0F);
+    Vec3 const  headLook  = dragon.getHeadLookVector(1.0F);
     float const baseAngle = std::atan2(headLook.z, headLook.x);
 
     std::string const pattern = normalizePattern(cfg.enderDragonBreathBarragePattern);
 
-    Spawner&     spawner = level.getSpawner();
-    BlockSource& region  = dragon.getDimensionBlockSource();
+    Spawner&                  spawner = level.getSpawner();
+    BlockSource&              region  = dragon.getDimensionBlockSource();
     ActorDefinitionIdentifier fireballId("minecraft:dragon_fireball");
 
     for (int i = 0; i < count; ++i) {
@@ -122,11 +122,7 @@ void fireBarrageWave(Level& level, EnderDragon& dragon, BarrageState& state) {
                   + static_cast<float>(i) * (2.0F * std::numbers::pi_v<float> / static_cast<float>(count));
         }
 
-        Vec3 direction{
-            std::cos(angle) * speed,
-            -0.2F * speed,
-            std::sin(angle) * speed
-        };
+        Vec3 direction{std::cos(angle) * speed, -0.2F * speed, std::sin(angle) * speed};
 
         spawner.spawnProjectile(region, fireballId, &dragon, firePos, direction);
     }
@@ -154,9 +150,9 @@ void processBarrageTick(Level& level) {
         }
 
         // 低血量时减少间隔
-        int actualInterval = interval;
+        int           actualInterval = interval;
         ActorUniqueID actorUid{uid};
-        Actor* dragonActor = level.fetchEntity(actorUid, false);
+        Actor*        dragonActor = level.fetchEntity(actorUid, false);
         if (!dragonActor || dragonActor->getEntityTypeId() != ActorType::Dragon || !dragonActor->isAlive()) {
             state.active = false;
             continue;
@@ -198,11 +194,11 @@ LL_TYPE_INSTANCE_HOOK(
         return;
     }
 
-    int64 uid               = dragon.getOrCreateUniqueID().rawID;
-    auto& state             = barrageStates[uid];
-    state.active            = true;
-    state.tickCounter       = 0;
-    state.spiralAngle       = 0.0F;
+    int64 uid         = dragon.getOrCreateUniqueID().rawID;
+    auto& state       = barrageStates[uid];
+    state.active      = true;
+    state.tickCounter = 0;
+    state.spiralAngle = 0.0F;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -215,8 +211,8 @@ LL_TYPE_INSTANCE_HOOK(
     origin();
 
     EnderDragon& dragon = this->mDragon;
-    int64 uid           = dragon.getOrCreateUniqueID().rawID;
-    auto  it            = barrageStates.find(uid);
+    int64        uid    = dragon.getOrCreateUniqueID().rawID;
+    auto         it     = barrageStates.find(uid);
     if (it != barrageStates.end()) {
         it->second.active = false;
     }
@@ -232,8 +228,8 @@ void enableEnderDragonBreathBarrage() {
     }
 
     if (!levelTickListener) {
-        levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::LevelTickEvent>(
-            [](ll::event::LevelTickEvent&) {
+        levelTickListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(
+            [](ll::event::ServerLevelTickEvent& event) {
                 ++globalTickCounter;
                 ll::service::getLevel().transform([&](Level& level) {
                     processBarrageTick(level);
