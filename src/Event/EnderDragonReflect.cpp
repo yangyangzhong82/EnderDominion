@@ -11,6 +11,7 @@
 #include "mc/world/actor/ActorHurtResult.h"
 #include "mc/world/actor/ActorDamageSource.h"
 #include "mc/world/actor/ActorType.h"
+#include "mc/world/actor/HurtParameters.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/monster/EnderDragon.h"
 #include "mc/world/actor/player/Player.h"
@@ -206,12 +207,11 @@ LL_TYPE_INSTANCE_HOOK(
     ActorHurtResult,
     ::ActorDamageSource const& source,
     float                      damage,
-    bool                       knock,
-    bool                       ignite
+    ::HurtParameters const&     hurtParameters
 ) {
     auto* selfMob = this->thisFor<Mob>();
     if (!selfMob || selfMob->getEntityTypeId() != ActorType::Dragon) {
-        return origin(source, damage, knock, ignite);
+        return origin(source, damage, hurtParameters);
     }
 
     ActorUniqueID const dragonUid = selfMob->getOrCreateUniqueID();
@@ -236,7 +236,7 @@ LL_TYPE_INSTANCE_HOOK(
         }
     }
 
-    ActorHurtResult const result = origin(source, finalDamage, knock, ignite);
+    ActorHurtResult const result = origin(source, finalDamage, hurtParameters);
     if (!result) {
         return result;
     }
@@ -260,7 +260,7 @@ LL_TYPE_INSTANCE_HOOK(
     float const reflectDamage = finalDamage * reflectRatio;
     if (cfg.enderDragonReflectEnabled && reflectRatio > 0.0F && reflectDamage > 0.0F && damageSourcePlayer) {
         ActorDamageByActorSource reflectSource{*selfMob, SharedTypes::Legacy::ActorDamageCause::Thorns};
-        static_cast<Mob*>(damageSourcePlayer)->_hurt(reflectSource, reflectDamage, false, false);
+        static_cast<Mob*>(damageSourcePlayer)->_hurt(reflectSource, reflectDamage, HurtParameters{false, false, {}, 0.0F});
     }
     return result;
 }

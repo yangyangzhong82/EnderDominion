@@ -5,8 +5,6 @@
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/attribute/Attribute.h"
-#include "mc/world/attribute/AttributeInstanceForwarder.h"
-#include "mc/world/attribute/AttributeModificationContext.h"
 #include "mc/world/attribute/BaseAttributeMap.h"
 #include "mc/world/attribute/SharedAttributes.h"
 #include "mc/world/level/Level.h"
@@ -26,14 +24,12 @@ void applyEnderDragonMaxHealth(Mob& mob) {
         return;
     }
 
-    auto*                      attributeMap = const_cast<BaseAttributeMap*>(mob.getAttributes().get());
-    AttributeInstanceForwarder healthAttribute{
-        attributeMap->getMutableInstance(SharedAttributes::HEALTH().mIDValue),
-        AttributeModificationContext{attributeMap}
-    };
-
-    healthAttribute.setMaxValue(targetHealth);
-    healthAttribute.setCurrentValue(targetHealth);
+    auto* attributeMap = const_cast<BaseAttributeMap*>(mob.getAttributes().get());
+    // Use the supported setters so health changes are marked dirty and synchronized.
+    if (!attributeMap->setMaxValue(SharedAttributes::HEALTH(), targetHealth)) {
+        return;
+    }
+    (void)attributeMap->setCurrentValue(SharedAttributes::HEALTH(), targetHealth);
 }
 } // namespace
 

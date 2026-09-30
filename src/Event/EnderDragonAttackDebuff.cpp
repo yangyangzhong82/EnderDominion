@@ -5,9 +5,11 @@
 #include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/ai/goal/DragonStrafePlayerGoal.h"
+#include "mc/world/effect/EffectDuration.h"
 #include "mc/world/effect/MobEffect.h"
 #include "mc/world/effect/MobEffectInstance.h"
 #include "mc/world/level/Level.h"
@@ -24,15 +26,13 @@
 namespace my_mod::event {
 
 namespace {
-std::unique_ptr<ll::memory::HookRegistrar<class DragonStrafeSetTargetHook>> hookRegistrar;
+std::unique_ptr<ll::memory::HookRegistrar<class DragonStrafeStartDebuffHook>> hookRegistrar;
 ll::event::ListenerPtr                                                      levelTickListener;
 int                                                                         dragonPeriodicDebuffTickCounter = 0;
 
-using EffectGetter = MobEffect*& (*)();
-
 struct EffectAlias {
     std::string_view name;
-    EffectGetter     getter;
+    MobEffectIds     id;
 };
 
 std::string normalizeEffectName(std::string_view rawName) {
@@ -60,29 +60,29 @@ std::string normalizeEffectName(std::string_view rawName) {
     return name;
 }
 
-MobEffect* resolveEffect(std::string_view rawName) {
+MobEffect const* resolveEffect(std::string_view rawName) {
     if (rawName.empty()) {
         return nullptr;
     }
 
     static constexpr std::array<EffectAlias, 17> aliases{
-        {{"slowness", &MobEffect::MOVEMENT_SLOWDOWN},
-         {"movement_slowdown", &MobEffect::MOVEMENT_SLOWDOWN},
-         {"mining_fatigue", &MobEffect::DIG_SLOWDOWN},
-         {"dig_slowdown", &MobEffect::DIG_SLOWDOWN},
-         {"weakness", &MobEffect::WEAKNESS},
-         {"poison", &MobEffect::POISON},
-         {"wither", &MobEffect::WITHER},
-         {"blindness", &MobEffect::BLINDNESS},
-         {"nausea", &MobEffect::CONFUSION},
-         {"confusion", &MobEffect::CONFUSION},
-         {"hunger", &MobEffect::HUNGER},
-         {"darkness", &MobEffect::DARKNESS},
-         {"levitation", &MobEffect::LEVITATION},
-         {"bad_omen", &MobEffect::BAD_OMEN},
-         {"raid_omen", &MobEffect::RAID_OMEN},
-         {"trial_omen", &MobEffect::TRIAL_OMEN},
-         {"fatal_poison", &MobEffect::FATAL_POISON}}
+        {{"slowness", MobEffectIds::MovementSlowdown},
+         {"movement_slowdown", MobEffectIds::MovementSlowdown},
+         {"mining_fatigue", MobEffectIds::DigSlowdown},
+         {"dig_slowdown", MobEffectIds::DigSlowdown},
+         {"weakness", MobEffectIds::Weakness},
+         {"poison", MobEffectIds::Poison},
+         {"wither", MobEffectIds::Wither},
+         {"blindness", MobEffectIds::Blindness},
+         {"nausea", MobEffectIds::Confusion},
+         {"confusion", MobEffectIds::Confusion},
+         {"hunger", MobEffectIds::Hunger},
+         {"darkness", MobEffectIds::Darkness},
+         {"levitation", MobEffectIds::Levitation},
+         {"bad_omen", MobEffectIds::BadOmen},
+         {"raid_omen", MobEffectIds::RaidOmen},
+         {"trial_omen", MobEffectIds::TrialOmen},
+         {"fatal_poison", MobEffectIds::FatalPoison}}
     };
 
     std::string const name = normalizeEffectName(rawName);
@@ -92,26 +92,26 @@ MobEffect* resolveEffect(std::string_view rawName) {
 
     for (auto const& alias : aliases) {
         if (alias.name == name) {
-            return alias.getter();
+            return MobEffect::mMobEffects()[alias.id].get();
         }
     }
 
-    if (MobEffect* effect = MobEffect::getByName(name); effect != nullptr) {
+    if (MobEffect const* effect = MobEffect::getByName(name); effect != nullptr) {
         return effect;
     }
     return MobEffect::getByName(std::string(rawName));
 }
 
-std::vector<MobEffect*> collectConfiguredDebuffs() {
+std::vector<MobEffect const*> collectConfiguredDebuffs() {
     static constexpr std::array<std::string_view, 6>
         defaultDebuffNames{"slowness", "weakness", "poison", "wither", "blindness", "hunger"};
 
     const auto& cfg = getConfig();
 
-    std::vector<MobEffect*> debuffs;
+    std::vector<MobEffect const*> debuffs;
     debuffs.reserve(cfg.enderDragonAttackDebuffTypes.size());
     for (auto const& effectName : cfg.enderDragonAttackDebuffTypes) {
-        MobEffect* effect = resolveEffect(effectName);
+        MobEffect const* effect = resolveEffect(effectName);
         if (!effect || !effect->mIsHarmful) {
             continue;
         }
@@ -126,7 +126,7 @@ std::vector<MobEffect*> collectConfiguredDebuffs() {
 
     debuffs.reserve(defaultDebuffNames.size());
     for (auto const effectName : defaultDebuffNames) {
-        MobEffect* effect = resolveEffect(effectName);
+        MobEffect const* effect = resolveEffect(effectName);
         if (effect && effect->mIsHarmful) {
             debuffs.push_back(effect);
         }
@@ -134,7 +134,7 @@ std::vector<MobEffect*> collectConfiguredDebuffs() {
     return debuffs;
 }
 
-MobEffect* getRandomDebuff(std::mt19937& rng, std::vector<MobEffect*> const& debuffs) {
+MobEffect const* getRandomDebuff(std::mt19937& rng, std::vector<MobEffect const*> const& debuffs) {
     if (debuffs.empty()) {
         return nullptr;
     }
@@ -170,7 +170,7 @@ Actor* findNearestPlayerInRange(Level& level, Actor const& center, float rangeSq
     return nearestPlayer;
 }
 
-void tryApplyDebuff(Actor& target, bool checkChance, std::vector<MobEffect*> const* providedDebuffs = nullptr) {
+void tryApplyDebuff(Actor& target, bool checkChance, std::vector<MobEffect const*> const* providedDebuffs = nullptr) {
     const auto& cfg = getConfig();
     if (!target.canReceiveMobEffectsFromGameplay()) {
         return;
@@ -189,14 +189,14 @@ void tryApplyDebuff(Actor& target, bool checkChance, std::vector<MobEffect*> con
         }
     }
 
-    std::vector<MobEffect*> localDebuffs;
+    std::vector<MobEffect const*> localDebuffs;
     auto const*             debuffs = providedDebuffs;
     if (!debuffs) {
         localDebuffs = collectConfiguredDebuffs();
         debuffs      = &localDebuffs;
     }
 
-    MobEffect* debuff = getRandomDebuff(rng, *debuffs);
+    MobEffect const* debuff = getRandomDebuff(rng, *debuffs);
     if (!debuff) {
         return;
     }
@@ -204,8 +204,7 @@ void tryApplyDebuff(Actor& target, bool checkChance, std::vector<MobEffect*> con
     int const ticks     = std::max(1, cfg.enderDragonAttackDebuffTicks);
     int const amplifier = std::max(0, cfg.enderDragonAttackDebuffLevel);
 
-    MobEffectInstance effectInstance(static_cast<uint>(debuff->mId));
-    effectInstance.mDuration->mValue = ticks;
+    MobEffectInstance effectInstance(static_cast<uint>(debuff->mId), EffectDuration{ticks});
     effectInstance.mAmplifier        = amplifier;
     effectInstance.mAmbient          = false;
     effectInstance.mEffectVisible    = true;
@@ -230,7 +229,7 @@ void applyPeriodicDragonDebuff(Level& level) {
     }
     float const rangeSquared = range * range;
 
-    std::vector<MobEffect*> debuffs = collectConfiguredDebuffs();
+    std::vector<MobEffect const*> debuffs = collectConfiguredDebuffs();
     if (debuffs.empty()) {
         return;
     }
@@ -250,24 +249,31 @@ void applyPeriodicDragonDebuff(Level& level) {
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    DragonStrafeSetTargetHook,
+    DragonStrafeStartDebuffHook,
     ll::memory::HookPriority::Normal,
     DragonStrafePlayerGoal,
-    &DragonStrafePlayerGoal::setTarget,
-    void,
-    Actor* target
+    &DragonStrafePlayerGoal::$start,
+    void
 ) {
-    origin(target);
-    if (!target || !target->hasType(ActorType::Player) || !getConfig().enderDragonAttackDebuffEnabled) {
+    origin();
+    if (!getConfig().enderDragonAttackDebuffEnabled) {
         return;
     }
-    tryApplyDebuff(*target, true);
+    // The target setter is no longer exposed; resolve the selected target when strafing starts.
+    auto targetRef = mAttackTarget->lock();
+    if (!targetRef) {
+        return;
+    }
+    Actor* target = Actor::tryGetFromEntity(*targetRef, false);
+    if (target && target->hasType(ActorType::Player) && target->isAlive()) {
+        tryApplyDebuff(*target, true);
+    }
 }
 } // namespace
 
 void enableEnderDragonAttackDebuff() {
     if (!hookRegistrar) {
-        hookRegistrar = std::make_unique<ll::memory::HookRegistrar<DragonStrafeSetTargetHook>>();
+        hookRegistrar = std::make_unique<ll::memory::HookRegistrar<DragonStrafeStartDebuffHook>>();
     }
 
     if (!levelTickListener) {

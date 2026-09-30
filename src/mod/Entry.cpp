@@ -14,6 +14,7 @@
 #include "Event/EnderDragonReflect.h"
 #include "Event/EnderDragonStrafeLightning.h"
 #include "Event/EnderDragonSummonAggro.h"
+#include "Event/EnderDragonTargetImmunity.h"
 #include "Event/EnderDragonTeleportDash.h"
 #include "I18n/I18n.h"
 #include "mod/Global.h"
@@ -69,6 +70,7 @@ bool Entry::enable() {
     event::enableEnderDragonReflect();
     event::enableEnderDragonStrafeLightning();
     event::enableEnderDragonSummonAggro();
+    event::enableEnderDragonTargetImmunity();
     event::enableEnderDragonTeleportDash();
     return true;
 }
@@ -88,6 +90,7 @@ bool Entry::disable() {
     event::disableEnderDragonStrafeLightning();
     event::disableEnderDragonNaturalRegen();
     event::disableEnderDragonSummonAggro();
+    event::disableEnderDragonTargetImmunity();
     event::disableEnderDragonTeleportDash();
     getLogger().info(tr("plugin.unloaded"));
     return true;

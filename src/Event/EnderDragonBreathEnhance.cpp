@@ -8,6 +8,7 @@
 #include "mc/world/actor/ActorHurtResult.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/AreaEffectCloud.h"
+#include "mc/world/actor/HurtParameters.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/monster/EnderDragon.h"
 #include "mc/world/effect/EffectDuration.h"
@@ -32,11 +33,9 @@ std::unique_ptr<ll::memory::HookRegistrar<struct BreathCloudEnhanceHook>> hookRe
 std::unordered_set<ActorUniqueID> enhancedClouds;
 std::unordered_map<ActorUniqueID, int> cloudDamageTickCounters;
 
-using EffectGetter = MobEffect*& (*)();
-
 struct EffectAlias {
     std::string_view name;
-    EffectGetter     getter;
+    MobEffectIds     id;
 };
 
 std::string normalizeEffectName(std::string_view rawName) {
@@ -64,30 +63,30 @@ std::string normalizeEffectName(std::string_view rawName) {
     return name;
 }
 
-MobEffect* resolveEffect(std::string_view rawName) {
+MobEffect const* resolveEffect(std::string_view rawName) {
     if (rawName.empty()) {
         return nullptr;
     }
 
     // NOLINTBEGIN(cppcoreguidelines-interfaces-global-init)
     static const std::array<EffectAlias, 17> aliases{
-        {{"slowness", &MobEffect::MOVEMENT_SLOWDOWN},
-         {"movement_slowdown", &MobEffect::MOVEMENT_SLOWDOWN},
-         {"mining_fatigue", &MobEffect::DIG_SLOWDOWN},
-         {"dig_slowdown", &MobEffect::DIG_SLOWDOWN},
-         {"weakness", &MobEffect::WEAKNESS},
-         {"poison", &MobEffect::POISON},
-         {"wither", &MobEffect::WITHER},
-         {"blindness", &MobEffect::BLINDNESS},
-         {"nausea", &MobEffect::CONFUSION},
-         {"confusion", &MobEffect::CONFUSION},
-         {"hunger", &MobEffect::HUNGER},
-         {"darkness", &MobEffect::DARKNESS},
-         {"levitation", &MobEffect::LEVITATION},
-         {"bad_omen", &MobEffect::BAD_OMEN},
-         {"raid_omen", &MobEffect::RAID_OMEN},
-         {"trial_omen", &MobEffect::TRIAL_OMEN},
-         {"fatal_poison", &MobEffect::FATAL_POISON}}
+        {{"slowness", MobEffectIds::MovementSlowdown},
+         {"movement_slowdown", MobEffectIds::MovementSlowdown},
+         {"mining_fatigue", MobEffectIds::DigSlowdown},
+         {"dig_slowdown", MobEffectIds::DigSlowdown},
+         {"weakness", MobEffectIds::Weakness},
+         {"poison", MobEffectIds::Poison},
+         {"wither", MobEffectIds::Wither},
+         {"blindness", MobEffectIds::Blindness},
+         {"nausea", MobEffectIds::Confusion},
+         {"confusion", MobEffectIds::Confusion},
+         {"hunger", MobEffectIds::Hunger},
+         {"darkness", MobEffectIds::Darkness},
+         {"levitation", MobEffectIds::Levitation},
+         {"bad_omen", MobEffectIds::BadOmen},
+         {"raid_omen", MobEffectIds::RaidOmen},
+         {"trial_omen", MobEffectIds::TrialOmen},
+         {"fatal_poison", MobEffectIds::FatalPoison}}
     };
     // NOLINTEND(cppcoreguidelines-interfaces-global-init)
 
@@ -98,11 +97,11 @@ MobEffect* resolveEffect(std::string_view rawName) {
 
     for (auto const& alias : aliases) {
         if (alias.name == name) {
-            return alias.getter();
+            return MobEffect::mMobEffects()[alias.id].get();
         }
     }
 
-    if (MobEffect* effect = MobEffect::getByName(name); effect != nullptr) {
+    if (MobEffect const* effect = MobEffect::getByName(name); effect != nullptr) {
         return effect;
     }
     return MobEffect::getByName(std::string(rawName));
@@ -163,13 +162,12 @@ void enhanceCloud(AreaEffectCloud& cloud, Level& level) {
     int const effectTicks = std::max(1, cfg.enderDragonBreathEnhanceExtraEffectTicks);
 
     for (auto const& effectName : cfg.enderDragonBreathEnhanceExtraEffects) {
-        MobEffect* effect = resolveEffect(effectName);
+        MobEffect const* effect = resolveEffect(effectName);
         if (!effect) {
             continue;
         }
 
-        MobEffectInstance effectInstance(static_cast<uint>(effect->mId));
-        effectInstance.mDuration->mValue = effectTicks;
+        MobEffectInstance effectInstance(static_cast<uint>(effect->mId), EffectDuration{effectTicks});
         effectInstance.mAmplifier        = effectLevel;
         effectInstance.mAmbient          = true;
         effectInstance.mEffectVisible    = true;
@@ -217,7 +215,7 @@ void applyExtraDamage(AreaEffectCloud& cloud, Level& level) {
         }
 
         ActorDamageByActorSource dmgSource{*dragon, SharedTypes::Legacy::ActorDamageCause::Magic};
-        static_cast<Mob*>(actor)->_hurt(dmgSource, extraDamage, true, false);
+        static_cast<Mob*>(actor)->_hurt(dmgSource, extraDamage, HurtParameters{true, false, {}, 0.0F});
     }
 }
 

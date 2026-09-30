@@ -13,6 +13,7 @@
 #include "mc/world/actor/ActorFactory.h"
 #include "mc/world/actor/ActorHurtResult.h"
 #include "mc/world/actor/ActorType.h"
+#include "mc/world/actor/HurtParameters.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/BlockSource.h"
@@ -184,7 +185,7 @@ void processPendingDashes(Level& level) {
                 {
                     ActorDefinitionIdentifier lightningId("minecraft:lightning_bolt");
                     BlockSource&              region = dragon->getDimensionBlockSource();
-                    auto bolt = level.getActorFactory().createSummonedActor(lightningId, dragon, dragon->getPosition());
+                    auto bolt = level.getActorFactory().createActor("summoned", lightningId, dragon, dragon->getPosition(), Vec2{});
                     if (bolt) {
                         level.addEntity(region, std::move(bolt));
                     }
@@ -197,7 +198,7 @@ void processPendingDashes(Level& level) {
                 {
                     ActorDefinitionIdentifier lightningId("minecraft:lightning_bolt");
                     BlockSource&              region = dragon->getDimensionBlockSource();
-                    auto bolt = level.getActorFactory().createSummonedActor(lightningId, dragon, dashPos);
+                    auto bolt = level.getActorFactory().createActor("summoned", lightningId, dragon, dashPos, Vec2{});
                     if (bolt) {
                         level.addEntity(region, std::move(bolt));
                     }
@@ -227,7 +228,7 @@ void processPendingDashes(Level& level) {
                             *dragon,
                             SharedTypes::Legacy::ActorDamageCause::EntityAttack
                         };
-                        static_cast<Mob*>(actor)->_hurt(dmgSource, damage, true, false);
+                        static_cast<Mob*>(actor)->_hurt(dmgSource, damage, HurtParameters{true, false, {}, 0.0F});
                     }
 
                     // 击退（方向从冲刺点指向玩家）
@@ -235,7 +236,7 @@ void processPendingDashes(Level& level) {
                         float const dist    = std::sqrt(d2);
                         float const invDist = 1.0F / dist;
                         Vec3        impulse{dx * invDist * knockback, 0.4F, dz * invDist * knockback};
-                        actor->applyImpulse(impulse);
+                        actor->lerpMotion(actor->getPosDelta() + impulse);
                     }
                 }
 

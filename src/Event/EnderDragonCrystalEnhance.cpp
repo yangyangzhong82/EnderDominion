@@ -9,6 +9,7 @@
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/monster/EnderCrystal.h"
 #include "mc/world/actor/monster/EnderDragon.h"
+#include "mc/world/effect/EffectDuration.h"
 #include "mc/world/effect/MobEffect.h"
 #include "mc/world/effect/MobEffectInstance.h"
 #include "mc/world/level/BlockPos.h"
@@ -152,8 +153,8 @@ void debuffNearbyPlayers(Level& level, EnderDragon& dragon, Vec3 const& crystalP
     int const amplifier = std::max(0, cfg.enderDragonCrystalDestroyDebuffLevel);
 
     // 施加缓慢 + 虚弱
-    MobEffect* slowness = MobEffect::MOVEMENT_SLOWDOWN();
-    MobEffect* weakness = MobEffect::WEAKNESS();
+    MobEffect const* slowness = MobEffect::mMobEffects()[MobEffectIds::MovementSlowdown].get();
+    MobEffect const* weakness = MobEffect::mMobEffects()[MobEffectIds::Weakness].get();
 
     for (auto* actor : level.getRuntimeActorList()) {
         if (!actor || !actor->hasType(ActorType::Player) || !actor->isAlive()) {
@@ -176,16 +177,14 @@ void debuffNearbyPlayers(Level& level, EnderDragon& dragon, Vec3 const& crystalP
         }
 
         if (slowness) {
-            MobEffectInstance effect(static_cast<uint>(slowness->mId));
-            effect.mDuration->mValue = ticks;
+            MobEffectInstance effect(static_cast<uint>(slowness->mId), EffectDuration{ticks});
             effect.mAmplifier        = amplifier;
             effect.mAmbient          = false;
             effect.mEffectVisible    = true;
             actor->addEffect(effect);
         }
         if (weakness) {
-            MobEffectInstance effect(static_cast<uint>(weakness->mId));
-            effect.mDuration->mValue = ticks;
+            MobEffectInstance effect(static_cast<uint>(weakness->mId), EffectDuration{ticks});
             effect.mAmplifier        = amplifier;
             effect.mAmbient          = false;
             effect.mEffectVisible    = true;

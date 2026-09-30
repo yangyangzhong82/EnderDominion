@@ -6,10 +6,12 @@
 #include "mc/world/actor/ActorDamageByActorSource.h"
 #include "mc/world/actor/ActorHurtResult.h"
 #include "mc/world/actor/ActorType.h"
+#include "mc/world/actor/HurtParameters.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/ai/goal/DragonLandingGoal.h"
 #include "mc/world/actor/monster/EnderDragon.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/effect/EffectDuration.h"
 #include "mc/world/effect/MobEffect.h"
 #include "mc/world/effect/MobEffectInstance.h"
 #include "mc/world/level/Level.h"
@@ -96,21 +98,20 @@ void applyShockwave(EnderDragon& dragon) {
                     upward * ratio,
                     dir.z * knockback * ratio
                 };
-                actor->applyImpulse(impulse);
+                actor->lerpMotion(actor->getPosDelta() + impulse);
             }
 
             // 施加伤害
             if (damage > 0.0F) {
                 ActorDamageByActorSource dmgSource{dragon, SharedTypes::Legacy::ActorDamageCause::EntityAttack};
-                static_cast<Mob*>(actor)->_hurt(dmgSource, damage * ratio, true, false);
+                static_cast<Mob*>(actor)->_hurt(dmgSource, damage * ratio, HurtParameters{true, false, {}, 0.0F});
             }
 
             // 施加缓慢效果
             if (actor->canReceiveMobEffectsFromGameplay()) {
-                MobEffect* slowness = MobEffect::MOVEMENT_SLOWDOWN();
+                MobEffect const* slowness = MobEffect::mMobEffects()[MobEffectIds::MovementSlowdown].get();
                 if (slowness) {
-                    MobEffectInstance effectInstance(static_cast<uint>(slowness->mId));
-                    effectInstance.mDuration->mValue = slownessTicks;
+                    MobEffectInstance effectInstance(static_cast<uint>(slowness->mId), EffectDuration{slownessTicks});
                     effectInstance.mAmplifier        = slownessLevel;
                     effectInstance.mAmbient          = false;
                     effectInstance.mEffectVisible    = true;

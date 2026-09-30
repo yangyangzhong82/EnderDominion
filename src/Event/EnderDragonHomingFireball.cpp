@@ -64,22 +64,22 @@ void applyHoming(Fireball& fireball) {
     }
 
     Vec3 const toTarget = targetPlayer->getPosition() - fireball.getPosition();
-    float const toTargetLenSq = toTarget.lengthSquared();
+    float const toTargetLenSq = static_cast<float>(toTarget.lengthSqr());
     if (toTargetLenSq <= 1.0e-6F) {
         return;
     }
 
     Vec3 const currentVel   = fireball.getPosDelta();
-    float const speedSq     = currentVel.lengthSquared();
+    float const speedSq     = static_cast<float>(currentVel.lengthSqr());
     float const speed       = std::max(0.08F, std::sqrt(std::max(0.0F, speedSq)));
-    Vec3 const desiredDir   = toTarget.normalized();
-    Vec3 const currentDir   = speedSq > 1.0e-6F ? currentVel.normalized() : desiredDir;
+    Vec3 const desiredDir   = toTarget.normalize();
+    Vec3 const currentDir   = speedSq > 1.0e-6F ? currentVel.normalize() : desiredDir;
     Vec3       blendedDir   = currentDir * (1.0F - turn) + desiredDir * turn;
-    float const blendedLen2 = blendedDir.lengthSquared();
+    float const blendedLen2 = static_cast<float>(blendedDir.lengthSqr());
     if (blendedLen2 <= 1.0e-6F) {
         blendedDir = desiredDir;
     } else {
-        blendedDir = blendedDir.normalized();
+        blendedDir = blendedDir.normalize();
     }
 
     fireball.mBuiltInComponents->mStateVectorComponent->mPosDelta = blendedDir * speed;

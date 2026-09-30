@@ -90,7 +90,7 @@ void summonLightning(Level& level, Actor& dragon, Actor& target) {
         strikePos.x += offsetDist(rng);
         strikePos.z += offsetDist(rng);
 
-        auto lightningEntity = level.getActorFactory().createSummonedActor(lightningId, &dragon, strikePos);
+        auto lightningEntity = level.getActorFactory().createActor("summoned", lightningId, &dragon, strikePos, Vec2{});
         if (!lightningEntity) {
             continue;
         }
